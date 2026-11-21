@@ -43,3 +43,31 @@ spec:
         set -e
         echo "Executing Jasmine Unit Tests..."
         npm test
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah
+  labels:
+    app.kubernetes.io/part-of: tekton-tasks
+spec:
+  description: Build and push container image using Buildah
+  params:
+    - name: IMAGE
+      description: Target container image reference
+      type: string
+  workspaces:
+    - name: source
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable:v1.31.0
+      workingDir: $(workspaces.source.path)
+      securityContext:
+        privileged: true
+      script: |
+        #!/bin/sh
+        set -e
+        echo "Building image $(params.IMAGE)..."
+        buildah --storage-driver=vfs bud -t $(params.IMAGE) .
+        echo "Pushing image to registry $(params.IMAGE)..."
+        buildah --storage-driver=vfs push $(params.IMAGE)
