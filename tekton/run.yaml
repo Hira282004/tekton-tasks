@@ -1,0 +1,27 @@
+# Tekton PipelineRun
+# Runs the tekton-tasks-pipeline:
+# npminstall -> tests -> build (buildah)
+
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: tekton-tasks-pipeline-run
+  labels:
+    app.kubernetes.io/part-of: tekton-tasks
+spec:
+  pipelineRef:
+    name: tekton-tasks-pipeline
+  params:
+    - name: IMAGE
+      value: tekton-tasks:latest
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes:
+            - ReadWriteOnce
+          resources:
+            requests:
+              storage: 1Gi
+  timeouts:
+    pipeline: 1h
