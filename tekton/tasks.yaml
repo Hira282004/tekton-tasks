@@ -1,0 +1,45 @@
+# Tekton Task Definitions
+# 1. npminstall - install Node dependencies with npm
+# 2. tests - run Jasmine automated unit tests with npm test
+
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: npminstall
+  labels:
+    app.kubernetes.io/part-of: tekton-tasks
+spec:
+  description: Install Node dependencies
+  workspaces:
+    - name: source
+  steps:
+    - name: npm-install
+      image: node:18-alpine
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -e
+        echo "Node Version: $(node -v)"
+        echo "NPM Version: $(npm -v)"
+        echo "Installing dependencies..."
+        npm install
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: tests
+  labels:
+    app.kubernetes.io/part-of: tekton-tasks
+spec:
+  description: Run Jasmine automated unit tests
+  workspaces:
+    - name: source
+  steps:
+    - name: run-jasmine
+      image: node:18-alpine
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/sh
+        set -e
+        echo "Executing Jasmine Unit Tests..."
+        npm test
