@@ -1,0 +1,41 @@
+# Tekton Pipeline
+# Steps: npminstall -> tests -> build (buildah)
+
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: tekton-tasks-pipeline
+  labels:
+    app.kubernetes.io/part-of: tekton-tasks
+spec:
+  description: CI/CD pipeline - install dependencies, run Jasmine tests, build container image
+  params:
+    - name: IMAGE
+      description: Target container image reference
+      type: string
+      default: tekton-tasks:latest
+  workspaces:
+    - name: source
+  tasks:
+    - name: npminstall
+      taskRef:
+        name: npminstall
+      workspaces:
+        - workspace: source
+    - name: tests
+      taskRef:
+        name: tests
+      runAfter:
+        - npminstall
+      workspaces:
+        - workspace: source
+    - name: build
+      taskRef:
+        name: buildah
+      runAfter:
+        - tests
+      params:
+        - name: IMAGE
+          value: $(params.IMAGE)
+      workspaces:
+        - workspace: source
